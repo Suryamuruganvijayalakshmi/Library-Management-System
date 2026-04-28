@@ -1,0 +1,52 @@
+[
+    {
+        "id": 1,
+        "user_id": 1,
+        "book_id": "1",
+        "borrow_date": "2026-04-21 15:15:14",
+        "due_date": "2026-05-05 15:15:14",
+        "return_date": null,
+        "fine_amount": 0,
+        "status": "active"
+    },
+    {
+        "id": 2,
+        "user_id": 2,
+        "book_id": "1",
+        "borrow_date": "2026-04-21 15:26:16",
+        "due_date": "2026-05-05 15:26:16",
+        "return_date": "2026-04-21 15:26:26",
+        "fine_amount": 0,
+        "status": "returned"
+    },
+    {
+        "id": 3,
+        "user_id": 2,
+        "book_id": "1",
+        "borrow_date": "2026-04-21 15:26:34",
+        "due_date": "2026-05-05 15:26:34",
+        "return_date": null,
+        "fine_amount": 0,
+        "status": "active"
+    },
+    {
+        "id": 4,
+        "user_id": 2,
+        "book_id": "2",
+        "borrow_date": "2026-04-21 15:27:08",
+        "due_date": "2026-05-05 15:27:08",
+        "return_date": null,
+        "fine_amount": 0,
+        "status": "active"
+    },
+    {
+        "id": 5,
+        "user_id": 4,
+        "book_id": "2",
+        "borrow_date": "2026-04-22 05:53:13",
+        "due_date": "2026-05-06 05:53:13",
+        "return_date": "2026-04-22 05:53:21",
+        "fine_amount": 0,
+        "status": "returned"
+    }
+]

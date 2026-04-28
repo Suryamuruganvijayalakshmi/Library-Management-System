@@ -1,0 +1,74 @@
+[
+    {
+        "id": 1,
+        "title": "The Great Gatsby",
+        "author": "F. Scott Fitzgerald",
+        "isbn": "978-0743273565",
+        "category": "Fiction",
+        "total_copies": 5,
+        "available_copies": 0
+    },
+    {
+        "id": 2,
+        "title": "To Kill a Mockingbird",
+        "author": "Harper Lee",
+        "isbn": "978-0061120084",
+        "category": "Fiction",
+        "total_copies": 5,
+        "available_copies": 4
+    },
+    {
+        "id": 3,
+        "title": "1984",
+        "author": "George Orwell",
+        "isbn": "978-0451524935",
+        "category": "Fiction",
+        "total_copies": 5,
+        "available_copies": 5
+    },
+    {
+        "id": 4,
+        "title": "A Brief History of Time",
+        "author": "Stephen Hawking",
+        "isbn": "978-0553380163",
+        "category": "Science",
+        "total_copies": 5,
+        "available_copies": 5
+    },
+    {
+        "id": 5,
+        "title": "Sapiens",
+        "author": "Yuval Noah Harari",
+        "isbn": "978-0062316097",
+        "category": "Non-Fiction",
+        "total_copies": 5,
+        "available_copies": 5
+    },
+    {
+        "id": 6,
+        "title": "Clean Code",
+        "author": "Robert C. Martin",
+        "isbn": "978-0132350884",
+        "category": "Technology",
+        "total_copies": 5,
+        "available_copies": 5
+    },
+    {
+        "id": 7,
+        "title": "Design Patterns",
+        "author": "Gang of Four",
+        "isbn": "978-0201633610",
+        "category": "Technology",
+        "total_copies": 5,
+        "available_copies": 5
+    },
+    {
+        "id": 8,
+        "title": "The Selfish Gene",
+        "author": "Richard Dawkins",
+        "isbn": "978-0192860926",
+        "category": "Science",
+        "total_copies": 5,
+        "available_copies": 5
+    }
+]

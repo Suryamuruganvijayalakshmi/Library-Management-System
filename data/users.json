@@ -1,0 +1,46 @@
+[
+    {
+        "name": "Test User",
+        "email": "test@library.com",
+        "phone": "9876543210",
+        "password": "$2y$10$Y9EnvpweiJOUhCPCGNiiR..RIbFOZCK1kuwqxXSHr9M3ecIq1xfli",
+        "id": 1,
+        "created_at": "2026-04-21 15:08:35",
+        "updated_at": "2026-04-21 15:08:35",
+        "balance": 0,
+        "fine_amount": 0
+    },
+    {
+        "name": "Surya.V.M",
+        "email": "vmsurya2007@gmail.com",
+        "phone": "+919842253267",
+        "password": "$2y$10$We5Vkha8hvaxKmlXVBuazuUE6zFfO79xMwNTo2LIxVI0m81olK9fW",
+        "id": 2,
+        "created_at": "2026-04-21 15:25:05",
+        "updated_at": "2026-04-21 15:26:26",
+        "balance": 0,
+        "fine_amount": 0
+    },
+    {
+        "name": "Surya",
+        "email": "s@gmail.com",
+        "phone": "9842253267",
+        "password": "$2y$10$FgCDTFy0ft/IDbrZ9T/XIOJ7vcoGBwgCfZq56Lwf.ccB1Cg/AzqJC",
+        "id": 3,
+        "created_at": "2026-04-22 03:22:43",
+        "updated_at": "2026-04-22 03:22:43",
+        "balance": 0,
+        "fine_amount": 0
+    },
+    {
+        "name": "siva",
+        "email": "siva@gmail.com",
+        "phone": "9842253267",
+        "password": "$2y$10$Y6mYcE6Huq92RnbpoAoc3.i//3psy9N0X2QQM50YJc3LxHYFN8Tzi",
+        "id": 4,
+        "created_at": "2026-04-22 05:52:50",
+        "updated_at": "2026-04-22 05:53:21",
+        "balance": 0,
+        "fine_amount": 0
+    }
+]

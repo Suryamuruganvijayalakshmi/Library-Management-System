@@ -1,0 +1,231 @@
+# Library Management System - QUICK START GUIDE 🚀
+
+## The Simplest Way to Get Started
+
+---
+
+## 📋 Prerequisites (One Time Only)
+
+### Do You Have Node.js?
+Open Command Prompt and type:
+```
+node -v
+```
+
+**If you see a version number:** ✅ You're ready!
+**If "command not found":** Go to https://nodejs.org/ and install it
+
+**Important:** When installing Node.js, check "Add to PATH"
+
+---
+
+## ▶️ RUN THE APPLICATION (3 Seconds)
+
+### **Windows:**
+```
+Double-click: run-desktop.bat
+```
+
+### **PowerShell:**
+```powershell
+.\run-desktop.ps1
+```
+
+### **Command Prompt:**
+```bash
+npm install
+npm start
+```
+
+---
+
+## 📱 What Happens Next
+
+```
+1. Terminal window appears
+   └─ This is normal, leave it open
+
+2. Electron window launches
+   └─ Your desktop app opens
+
+3. Login page appears
+   └─ Ready to use!
+```
+
+---
+
+## 🔐 First Time: Create Account
+
+**Click:** "Register here"
+
+**Fill in:**
+- Full Name: `Your Name`
+- Email: `your@email.com`
+- Phone: `123-456-7890`
+- Password: `YourPassword123`
+- Card Details: (Use test card 5555555555554444)
+
+**Click:** "Create Account"
+
+---
+
+## 🔑 Login
+
+**Email:** Your email address
+**Password:** Your password
+
+**Click:** "Login"
+
+---
+
+## 📚 Use the Application
+
+### **Browse Books**
+- Click "Browse Books" in navigation
+- See all available books
+- Search by title, author, or ISBN
+- Filter by category
+
+### **Borrow a Book**
+- Find a book you like
+- Click "Borrow"
+- Confirm when asked
+- Book appears in "My Books"
+
+### **Return a Book**
+- Go to "My Books"
+- Find the borrowed book
+- Click "Return Book"
+- Fines calculated automatically if overdue
+
+### **View Profile**
+- Click "Profile"
+- See your information
+- Update personal details
+- View payment method
+
+---
+
+## 📂 Where is My Data?
+
+**All data saved in:** `/data/` folder
+- `users.json` - Your account
+- `books.json` - Book catalog
+- `borrowing.json` - Your borrowing history
+- `payment_methods.json` - Your card
+- `activity_log.json` - Your activities
+
+**All on your computer - 100% private!**
+
+---
+
+## 🔨 Build Windows Installer
+
+To create an installer for other people:
+
+```
+Double-click: build-installer.bat
+```
+
+**Creates two files in `dist/` folder:**
+1. `Library Management System Setup 1.0.0.exe` - Full installer
+2. `Library Management System 1.0.0.exe` - Portable (no install needed)
+
+**Share these files with others!**
+
+---
+
+## ❌ If Something Goes Wrong
+
+### "Node.js not found"
+→ Install Node.js from https://nodejs.org/
+
+### "PHP not found"
+→ PHP is already on your system
+→ Ensure it's in your PATH
+
+### Application won't start
+→ Run in Command Prompt to see error:
+```bash
+npm start
+```
+
+### Data not saving
+→ Check that `/data/` folder exists
+→ Check folder permissions
+
+### Port 8000 in use
+→ Close other applications
+
+---
+
+## 📖 More Information
+
+**Full Guides Available:**
+- `START_HERE.md` - Complete overview
+- `DESKTOP_APP_README.md` - Technical details
+- `WINDOWS_SETUP_GUIDE.md` - Detailed setup
+
+---
+
+## ✨ Sample Books Included
+
+When you first run the app, you'll find:
+1. The Great Gatsby (Fiction)
+2. To Kill a Mockingbird (Fiction)
+3. 1984 (Fiction)
+4. A Brief History of Time (Science)
+5. Sapiens (Non-Fiction)
+6. Clean Code (Technology)
+7. Design Patterns (Technology)
+8. The Selfish Gene (Science)
+
+**14-day borrowing period | $0.50/day fine if overdue**
+
+---
+
+## 🎯 Typical First Session
+
+```
+Time    Action
+─────────────────────────────
+0:00    Double-click run-desktop.bat
+0:05    App opens, login page shows
+0:10    Click "Register here"
+0:20    Fill form and create account
+0:25    Login with new account
+0:30    Click "Browse Books"
+0:40    Borrow "The Great Gatsby"
+0:50    Go to "My Books" - see borrowed book
+1:00    Update profile with your info
+1:05    View payment method
+1:10    Done! App fully functional
+```
+
+---
+
+## 🎉 Ready to Go!
+
+**Start:** Double-click `run-desktop.bat`
+
+**Enjoy:** Your desktop library management system!
+
+---
+
+## 🆘 Still Need Help?
+
+1. **Read:** `WINDOWS_SETUP_GUIDE.md`
+2. **Troubleshoot:** Check the "Common Issues" section
+3. **Debug:** Open Command Prompt and type:
+   ```bash
+   npm start
+   ```
+   This shows detailed error messages
+
+---
+
+**Status:** ✅ Ready to Use
+**Version:** 1.0.0
+**Platform:** Windows Desktop
+
+Let's get started! 🚀

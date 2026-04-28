@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Library Management System</title>
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="dashboard-page">
+    <nav class="navbar">
+        <div class="navbar-brand">📚 Library Management</div>
+        <div class="navbar-menu">
+            <a href="#" class="nav-item" onclick="showSection('dashboard')">Dashboard</a>
+            <a href="#" class="nav-item" onclick="showSection('books')">Browse Books</a>
+            <a href="#" class="nav-item" onclick="showSection('borrowed')">My Books</a>
+            <a href="#" class="nav-item" onclick="showSection('waiting')">Waiting List</a>
+            <a href="#" class="nav-item" onclick="showSection('profile')">Profile</a>
+            <button class="btn btn-danger" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="user-info">
+                <div class="user-avatar">👤</div>
+                <h3 id="userName">John Doe</h3>
+                <p id="userEmail">john@example.com</p>
+            </div>
+
+            <div class="user-stats">
+                <div class="stat-box">
+                    <span class="stat-label">Books Borrowed</span>
+                    <span class="stat-value" id="borrowedCount">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Outstanding Fine</span>
+                    <span class="stat-value fine" id="fineAmount">$0.00</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Account Balance</span>
+                    <span class="stat-value balance" id="balanceAmount">$0.00</span>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="quick-actions">
+                <h4>Quick Actions</h4>
+                <button class="btn-secondary" onclick="showSection('books')">Borrow Book</button>
+                <button class="btn-secondary" onclick="showSection('borrowed')">Return Book</button>
+                <button class="btn-secondary" onclick="showSection('profile')">Update Profile</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="content-section active">
+                <h2>Welcome to Your Library Dashboard</h2>
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <h3>📖 Library Info</h3>
+                        <p>Access your library account, manage books, and track your borrowing history.</p>
+                    </div>
+                    <div class="card">
+                        <h3>📅 Due Dates</h3>
+                        <p>Keep track of book due dates and avoid late fees.</p>
+                    </div>
+                    <div class="card">
+                        <h3>💳 Payment Method</h3>
+                        <p>Your payment method is securely stored for fine payments.</p>
+                    </div>
+                </div>
+
+                <div class="recent-activity">
+                    <h3>Recent Activity</h3>
+                    <div id="activityList" class="activity-list">
+                        <p class="empty-message">No recent activity</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Browse Books Section -->
+            <section id="books-section" class="content-section">
+                <h2>Browse Library Books</h2>
+                
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search by title, author, or ISBN...">
+                    <button onclick="searchBooks()" class="btn btn-primary">Search</button>
+                </div>
+
+                <div class="filter-bar">
+                    <select id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="Fiction">Fiction</option>
+                        <option value="Non-Fiction">Non-Fiction</option>
+                        <option value="Science">Science</option>
+                        <option value="Technology">Technology</option>
+                        <option value="History">History</option>
+                    </select>
+                </div>
+
+                <div id="booksList" class="books-grid">
+                    <p class="loading">Loading books...</p>
+                </div>
+            </section>
+
+            <!-- My Borrowed Books Section -->
+            <section id="borrowed-section" class="content-section">
+                <h2>My Borrowed Books</h2>
+                
+                <div id="borrowedList" class="borrowed-list">
+                    <p class="loading">Loading borrowed books...</p>
+                </div>
+            </section>
+
+            <!-- Waiting List Section -->
+            <section id="waiting-section" class="content-section">
+                <h2>📋 My Waiting List</h2>
+                <p style="color: #666; margin-bottom: 20px;">Books you're waiting for will appear here. You'll be notified when a book becomes available.</p>
+                
+                <div id="waitingList" class="borrowed-list">
+                    <p class="empty-message">You are not waiting for any books</p>
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profile-section" class="content-section">
+                <h2>My Profile</h2>
+                
+                <div class="profile-container">
+                    <div class="profile-section-box">
+                        <h3>Personal Information</h3>
+                        <form id="profileForm">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="profileName" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="profileEmail" disabled>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="tel" id="profilePhone" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                        </form>
+                    </div>
+
+                    <div class="profile-section-box">
+                        <h3>Change Password</h3>
+                        <form id="passwordForm">
+                            <div class="form-group">
+                                <label>Current Password</label>
+                                <input type="password" id="currentPassword" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" id="newPassword" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Confirm Password</label>
+                                <input type="password" id="confirmPassword" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Change Password</button>
+                        </form>
+                    </div>
+
+                    <div class="profile-section-box">
+                        <h3>Payment Method</h3>
+                        <div id="paymentInfo" class="payment-info">
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal for borrowing book -->
+    <div id="borrowModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('borrowModal')">&times;</span>
+            <h2>Borrow Book</h2>
+            <div id="borrowBookDetails"></div>
+            <button onclick="borrowBook()" class="btn btn-primary">Confirm Borrow</button>
+            <button onclick="closeModal('borrowModal')" class="btn btn-secondary">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Modal for returning book -->
+    <div id="returnModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('returnModal')">&times;</span>
+            <h2>Return Book</h2>
+            <div id="returnBookDetails"></div>
+            <button onclick="returnBook()" class="btn btn-primary">Confirm Return</button>
+            <button onclick="closeModal('returnModal')" class="btn btn-secondary">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let selectedBookId = null;
+        let selectedBorrowId = null;
+
+        // Initialize dashboard
+        window.addEventListener('load', function() {
+            loadUserInfo();
+            loadBooks();
+            loadBorrowedBooks();
+        });
+
+        function showSection(sectionName) {
+            document.querySelectorAll('.content-section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            document.getElementById(sectionName + '-section').classList.add('active');
+
+            if(sectionName === 'books') {
+                loadBooks();
+            } else if(sectionName === 'borrowed') {
+                loadBorrowedBooks();
+            } else if(sectionName === 'waiting') {
+                loadWaitingList();
+            } else if(sectionName === 'profile') {
+                loadProfileInfo();
+            }
+        }
+
+        function loadUserInfo() {
+            fetch('php/user.php?action=getInfo')
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        currentUser = data.user;
+                        document.getElementById('userName').textContent = data.user.name;
+                        document.getElementById('userEmail').textContent = data.user.email;
+                        document.getElementById('borrowedCount').textContent = data.user.borrowed_count || 0;
+                        document.getElementById('fineAmount').textContent = '$' + (data.user.fine_amount || 0).toFixed(2);
+                        document.getElementById('balanceAmount').textContent = '$' + (data.user.balance || 0).toFixed(2);
+                        loadActivityLog();
+                    } else {
+                        window.location.href = 'index.html';
+                    }
+                })
+                .catch(err => console.error('Error:', err));
+        }
+
+        function loadBooks() {
+            const search = document.getElementById('searchInput')?.value || '';
+            const category = document.getElementById('categoryFilter')?.value || '';
+
+            fetch(`php/books.php?action=getBooks&search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}`)
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('booksList');
+                    if(data.success && data.books.length > 0) {
+                        container.innerHTML = data.books.map(book => `
+                            <div class="book-card">
+                                <div class="book-cover">📕</div>
+                                <h3>${book.title}</h3>
+                                <p class="author">by ${book.author}</p>
+                                <p class="isbn">ISBN: ${book.isbn}</p>
+                                <p class="category">${book.category}</p>
+                                <p class="available ${book.available_copies > 0 ? 'in-stock' : 'out-of-stock'}">
+                                    ${book.available_copies > 0 ? book.available_copies + ' Available' : 'Out of Stock'}
+                                </p>
+                                ${book.available_copies > 0 ? `<button onclick="openBorrowModal(${book.id}, '${book.title}')" class="btn btn-primary">Borrow</button>` : `<button onclick="openWaitingListModal(${book.id}, '${book.title}')" class="btn btn-secondary">Join Waiting List</button>`}
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<p class="empty-message">No books found</p>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    document.getElementById('booksList').innerHTML = '<p class="error-message">Error loading books</p>';
+                });
+        }
+
+        function searchBooks() {
+            loadBooks();
+        }
+
+        function openBorrowModal(bookId, title) {
+            selectedBookId = bookId;
+            document.getElementById('borrowBookDetails').innerHTML = `<p>Are you sure you want to borrow "<strong>${title}</strong>"?</p>`;
+            document.getElementById('borrowModal').style.display = 'block';
+        }
+
+        function borrowBook() {
+            if(!selectedBookId || !currentUser) return;
+
+            fetch('php/books.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=borrowBook&bookId=${selectedBookId}&userId=${currentUser.id}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    alert('Book borrowed successfully!');
+                    closeModal('borrowModal');
+                    loadBooks();
+                    loadBorrowedBooks();
+                    loadUserInfo();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(err => alert('Error: ' + err));
+        }
+
+        function loadBorrowedBooks() {
+            fetch('php/books.php?action=getBorrowedBooks')
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('borrowedList');
+                    if(data.success && data.borrowed.length > 0) {
+                        container.innerHTML = data.borrowed.map(borrow => {
+                            const dueDate = new Date(borrow.due_date);
+                            const today = new Date();
+                            const isOverdue = today > dueDate;
+                            
+                            return `
+                                <div class="borrowed-item ${isOverdue ? 'overdue' : ''}">
+                                    <div class="book-info">
+                                        <h3>${borrow.book_title}</h3>
+                                        <p>Author: ${borrow.author}</p>
+                                        <p>Borrowed: ${new Date(borrow.borrow_date).toLocaleDateString()}</p>
+                                        <p class="due-date ${isOverdue ? 'overdue-text' : ''}">
+                                            Due: ${dueDate.toLocaleDateString()}
+                                            ${isOverdue ? ' <strong>(OVERDUE)</strong>' : ''}
+                                        </p>
+                                        ${borrow.fine_amount > 0 ? `<p class="fine">Fine: $${borrow.fine_amount.toFixed(2)}</p>` : ''}
+                                    </div>
+                                    <button onclick="openReturnModal(${borrow.id}, '${borrow.book_title}')" class="btn btn-success">Return Book</button>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        container.innerHTML = '<p class="empty-message">You haven\'t borrowed any books yet</p>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    document.getElementById('borrowedList').innerHTML = '<p class="error-message">Error loading borrowed books</p>';
+                });
+        }
+
+        function openReturnModal(borrowId, title) {
+            selectedBorrowId = borrowId;
+            document.getElementById('returnBookDetails').innerHTML = `<p>Are you sure you want to return "<strong>${title}</strong>"?</p>`;
+            document.getElementById('returnModal').style.display = 'block';
+        }
+
+        function returnBook() {
+            if(!selectedBorrowId) return;
+
+            fetch('php/books.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=returnBook&borrowId=${selectedBorrowId}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    alert('Book returned successfully!');
+                    closeModal('returnModal');
+                    loadBorrowedBooks();
+                    loadBooks();
+                    loadUserInfo();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(err => alert('Error: ' + err));
+        }
+
+        function loadProfileInfo() {
+            if(!currentUser) return;
+
+            document.getElementById('profileName').value = currentUser.name;
+            document.getElementById('profileEmail').value = currentUser.email;
+            document.getElementById('profilePhone').value = currentUser.phone;
+
+            // Load payment info
+            fetch('php/user.php?action=getPaymentInfo')
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success && data.payment) {
+                        const p = data.payment;
+                        document.getElementById('paymentInfo').innerHTML = `
+                            <div class="payment-details">
+                                <p><strong>Card Holder:</strong> ${p.card_name}</p>
+                                <p><strong>Card Number:</strong> ****${p.card_number.slice(-4)}</p>
+                                <p><strong>Expires:</strong> ${p.card_expiry}</p>
+                            </div>
+                        `;
+                    }
+                });
+        }
+
+        function loadActivityLog() {
+            fetch('php/user.php?action=getActivity')
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('activityList');
+                    if(data.success && data.activity.length > 0) {
+                        container.innerHTML = data.activity.map(act => `
+                            <div class="activity-item">
+                                <span class="activity-type">${act.action}</span>
+                                <span class="activity-book">${act.book_title || 'N/A'}</span>
+                                <span class="activity-date">${new Date(act.activity_date).toLocaleDateString()}</span>
+                            </div>
+                        `).join('');
+                    }
+                });
+        }
+
+        document.getElementById('profileForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('profileName').value;
+            const phone = document.getElementById('profilePhone').value;
+
+            fetch('php/user.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=updateProfile&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if(data.success) {
+                    loadUserInfo();
+                }
+            });
+        });
+
+        document.getElementById('passwordForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const current = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+
+            if(newPass !== confirm) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            fetch('php/user.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=changePassword&currentPassword=${encodeURIComponent(current)}&newPassword=${encodeURIComponent(newPass)}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if(data.success) {
+                    document.getElementById('passwordForm').reset();
+                }
+            });
+        });
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function openWaitingListModal(bookId, title) {
+            selectedBookId = bookId;
+            if(!confirm(`Add "${title}" to your waiting list?`)) return;
+            joinWaitingList(bookId);
+        }
+
+        function joinWaitingList(bookId) {
+            fetch('php/books.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=joinWaitingList&bookId=${bookId}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if(data.success) {
+                    loadBooks();
+                    loadWaitingList();
+                }
+            })
+            .catch(err => alert('Error: ' + err));
+        }
+
+        function loadWaitingList() {
+            fetch('php/books.php?action=getWaitingList')
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('waitingList');
+                    if(data.success && data.waiting_list && data.waiting_list.length > 0) {
+                        container.innerHTML = data.waiting_list.map((item, index) => `
+                            <div class="waiting-list-item ${item.available_copies > 0 ? 'available' : ''}">
+                                <div class="waiting-position">#${item.position}</div>
+                                <div class="waiting-info">
+                                    <div class="waiting-book-info">
+                                        <h3>${item.book_title}</h3>
+                                        <p class="author">by ${item.author}</p>
+                                        <p class="waiting-date">Requested: ${new Date(item.request_date).toLocaleDateString()}</p>
+                                    </div>
+                                    <div class="waiting-status">
+                                        <span class="status-label">Status</span>
+                                        <span class="status-value ${item.available_copies > 0 ? 'available-text' : 'waiting-text'}">
+                                            ${item.available_copies > 0 ? `✓ Available` : 'Waiting'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <button onclick="leaveWaitingList(${item.id})" class="btn btn-danger">Remove</button>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<p class="empty-message">You are not waiting for any books</p>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    document.getElementById('waitingList').innerHTML = '<p class="error-message">Error loading waiting list</p>';
+                });
+        }
+
+        function leaveWaitingList(waitingId) {
+            if(!confirm('Are you sure you want to leave this waiting list?')) return;
+
+            fetch('php/books.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=leaveWaitingList&waitingId=${waitingId}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if(data.success) {
+                    loadWaitingList();
+                }
+            })
+            .catch(err => alert('Error: ' + err));
+        }
+
+        window.onclick = function(event) {
+            let modal = event.target;
+            if(modal.classList.contains('modal')) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function logout() {
+            if(confirm('Are you sure you want to logout?')) {
+                fetch('php/auth.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'action=logout'
+                })
+                .then(() => {
+                    window.location.href = 'index.html';
+                });
+            }
+        }
+    </script>
+</body>
+</html>
