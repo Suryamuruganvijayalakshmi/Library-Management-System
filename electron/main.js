@@ -1,22 +1,36 @@
 const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const path = require('path');
+const { spawn } = require('child_process');
 let mainWindow;
-let serverInstance;
+let phpServer;
 const isDev = process.env.NODE_ENV === 'development';
 
-// Start local Node server
-function startNodeServer() {
+// Start PHP server
+function startPhpServer() {
   return new Promise((resolve, reject) => {
-    try {
-      const api = require(path.join(__dirname, '..', 'api', 'index.js'));
-      serverInstance = api.startServer(process.env.PORT || 3000, resolve);
-    } catch (err) {
+    const docRoot = path.join(__dirname, '..');
+    phpServer = spawn('php', ['-S', 'localhost:8000', '-t', docRoot], {
+      stdio: 'pipe',
+      shell: false
+    });
+
+    phpServer.stdout.on('data', (data) => {
+      console.log(`PHP Server: ${data}`);
+      resolve();
+    });
+
+    phpServer.stderr.on('data', (data) => {
+      console.error(`PHP Server Error: ${data}`);
+    });
+
+    phpServer.on('error', (err) => {
       reject(err);
-    }
+    });
+
+    setTimeout(resolve, 2000);
   });
 }
 
-// Create window
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -32,9 +46,8 @@ function createWindow() {
     icon: path.join(__dirname, '../assets/icon.png')
   });
 
-  mainWindow.loadURL('http://localhost:3000');
+  mainWindow.loadURL('http://localhost:8000');
 
-  // Open DevTools in development
   if (isDev) {
     mainWindow.webContents.openDevTools();
   }
@@ -44,10 +57,9 @@ function createWindow() {
   });
 }
 
-// App event handlers
 app.on('ready', async () => {
   try {
-    await startNodeServer();
+    await startPhpServer();
     createWindow();
     createMenu();
   } catch (err) {
@@ -68,14 +80,12 @@ app.on('activate', () => {
   }
 });
 
-// Cleanup on app quit
 app.on('before-quit', () => {
-  if (serverInstance && typeof serverInstance.close === 'function') {
-    serverInstance.close();
+  if (phpServer) {
+    phpServer.kill();
   }
 });
 
-// Create menu
 function createMenu() {
   const template = [
     {
@@ -132,7 +142,6 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-// Handle IPC events (if needed for communication between main and renderer)
 ipcMain.handle('get-app-version', () => {
   return app.getVersion();
 });
