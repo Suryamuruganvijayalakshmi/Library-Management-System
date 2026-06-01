@@ -1,8 +1,8 @@
 {
   "name": "library-management-system",
   "version": "1.0.0",
-  "description": "Modern Library Management System - Web Application",
-  "main": "api/index.js",
+  "description": "Library Management System Desktop App",
+  "main": "electron/main.js",
   "homepage": "./",
   "author": "Library System",
   "license": "MIT",
@@ -10,14 +10,18 @@
     "node": "18.x"
   },
   "scripts": {
-    "start": "node api/index.js",
-    "dev": "node api/index.js",
-    "build": "echo 'Build complete'"
+    "start": "electron .",
+    "dev": "electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win --publish never"
   },
   "dependencies": {
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "body-parser": "^1.20.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "electron": "latest",
+    "electron-builder": "^24.9.1"
+  }
 }

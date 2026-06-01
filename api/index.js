@@ -220,12 +220,15 @@ app.use((req, res) => {
     res.status(404).json({ success: false, message: 'Endpoint not found' });
 });
 
-// Export for Vercel
-if (process.env.NODE_ENV === 'production') {
-    module.exports = app;
-} else {
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-        console.log(`Server running on http://localhost:${PORT}`);
+function startServer(port = process.env.PORT || 3000, callback) {
+    return app.listen(port, () => {
+        console.log(`Server running on http://localhost:${port}`);
+        if (typeof callback === 'function') callback();
     });
+}
+
+module.exports = { app, startServer };
+
+if (require.main === module) {
+    startServer();
 }

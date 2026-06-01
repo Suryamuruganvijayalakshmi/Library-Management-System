@@ -1,35 +1,18 @@
 const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const path = require('path');
-const { spawn } = require('child_process');
 let mainWindow;
-let phpServer;
+let serverInstance;
 const isDev = process.env.NODE_ENV === 'development';
 
-// Start PHP server
-function startPhpServer() {
+// Start local Node server
+function startNodeServer() {
   return new Promise((resolve, reject) => {
-    // Check if PHP is available
-    const docRoot = path.join(__dirname, '..');
-    phpServer = spawn('php', ['-S', 'localhost:8000', '-t', docRoot], {
-      stdio: 'pipe',
-      shell: false  // Changed to false to avoid path escaping issues
-    });
-
-    phpServer.stdout.on('data', (data) => {
-      console.log(`PHP Server: ${data}`);
-      resolve();
-    });
-
-    phpServer.stderr.on('data', (data) => {
-      console.error(`PHP Server Error: ${data}`);
-    });
-
-    phpServer.on('error', (err) => {
+    try {
+      const api = require(path.join(__dirname, '..', 'api', 'index.js'));
+      serverInstance = api.startServer(process.env.PORT || 3000, resolve);
+    } catch (err) {
       reject(err);
-    });
-
-    // Give server time to start
-    setTimeout(resolve, 2000);
+    }
   });
 }
 
@@ -49,7 +32,7 @@ function createWindow() {
     icon: path.join(__dirname, '../assets/icon.png')
   });
 
-  mainWindow.loadURL('http://localhost:8000');
+  mainWindow.loadURL('http://localhost:3000');
 
   // Open DevTools in development
   if (isDev) {
@@ -64,7 +47,7 @@ function createWindow() {
 // App event handlers
 app.on('ready', async () => {
   try {
-    await startPhpServer();
+    await startNodeServer();
     createWindow();
     createMenu();
   } catch (err) {
@@ -87,8 +70,8 @@ app.on('activate', () => {
 
 // Cleanup on app quit
 app.on('before-quit', () => {
-  if (phpServer) {
-    phpServer.kill();
+  if (serverInstance && typeof serverInstance.close === 'function') {
+    serverInstance.close();
   }
 });
 
