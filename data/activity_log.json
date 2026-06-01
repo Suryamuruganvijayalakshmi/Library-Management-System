@@ -118,5 +118,13 @@
         "action": "joined_waiting_list",
         "book_title": "The Great Gatsby",
         "activity_date": "2026-04-22 05:53:29"
+    },
+    {
+        "id": 16,
+        "user_id": 5,
+        "book_id": null,
+        "action": "registered",
+        "book_title": null,
+        "activity_date": "2026-06-01 15:02:36"
     }
 ]

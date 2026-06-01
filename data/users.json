@@ -42,5 +42,16 @@
         "updated_at": "2026-04-22 05:53:21",
         "balance": 0,
         "fine_amount": 0
+    },
+    {
+        "name": "Surya",
+        "email": "Surya@gmail.com",
+        "phone": "9842253267",
+        "password": "$2y$10$2mhztcUvmBYhJBk92hGkJO9ADOGeNbDbNZpcJajWgGY7CHVuAxg9q",
+        "id": 5,
+        "created_at": "2026-06-01 15:02:36",
+        "updated_at": "2026-06-01 15:02:36",
+        "balance": 0,
+        "fine_amount": 0
     }
 ]

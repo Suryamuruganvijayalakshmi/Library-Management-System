@@ -6,3 +6,13 @@ node_modules/
 *.log
 .DS_Store
 Thumbs.db
+.env
+.env.local
+.vercel/
+dist/
+build/
+data/users.json
+data/borrowing.json
+data/activity_log.json
+data/payment_methods.json
+data/waiting_list.json

@@ -1,64 +1,23 @@
 {
   "name": "library-management-system",
   "version": "1.0.0",
-  "description": "Modern Library Management System Desktop Application",
-  "main": "electron/main.js",
+  "description": "Modern Library Management System - Web Application",
+  "main": "api/index.js",
   "homepage": "./",
   "author": "Library System",
   "license": "MIT",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
-    "start": "concurrently \"npm run server\" \"wait-on http://localhost:8000 && electron .\"",
-    "server": "php -S localhost:8000 -t .",
-    "electron": "electron .",
-    "build": "electron-builder",
-    "build-win": "electron-builder --win --publish never",
-    "build-publish": "electron-builder --win -p always"
+    "start": "node api/index.js",
+    "dev": "node api/index.js",
+    "build": "echo 'Build complete'"
   },
-  "dependencies": {},
-  "devDependencies": {
-    "electron": "latest",
-    "electron-builder": "^24.9.1",
-    "concurrently": "^8.2.2",
-    "wait-on": "^7.1.0"
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "body-parser": "^1.20.2"
   },
-  "build": {
-    "appId": "com.library.management",
-    "productName": "Library Management System",
-    "files": [
-      "electron/**/*",
-      "index.html",
-      "dashboard.html",
-      "assets/**/*",
-      "php/**/*",
-      "data/**/*",
-      "node_modules/**/*"
-    ],
-    "directories": {
-      "buildResources": "assets"
-    },
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "assets/icon.ico"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Library Management System"
-    }
-  }
+  "devDependencies": {}
 }

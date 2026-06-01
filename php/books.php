@@ -24,23 +24,177 @@ if ($action === 'getBooks') {
     getWaitingList();
 } elseif ($action === 'leaveWaitingList') {
     leaveWaitingList();
+} elseif ($action === 'getTopBooks') {
+    getTopBooks();
+} elseif ($action === 'getHighDemandBooks') {
+    getHighDemandBooks();
+} elseif ($action === 'getRecommendations') {
+    getRecommendations();
+} elseif ($action === 'estimateFine') {
+    estimateFine();
 } else {
     echo json_encode(['success' => false, 'message' => 'Invalid action']);
+}
+
+// Analytics endpoint
+function getAnalytics() {
+    $borrowing = loadJSON('borrowing.json');
+    $books = loadJSON('books.json');
+
+    $totalIssues = 0;
+    $totalReturns = 0;
+    $perBook = [];
+    $hourly = array_fill(0,24,0);
+    $dow = array_fill(0,7,0); // 0 Sun .. 6 Sat
+
+    foreach ($borrowing as $b) {
+        if (!isset($b['borrow_date'])) continue;
+        $totalIssues++;
+        $bookId = $b['book_id'];
+        if (!isset($perBook[$bookId])) $perBook[$bookId] = 0;
+        $perBook[$bookId]++;
+
+        // parse borrow_date
+        try {
+            $dt = new DateTime($b['borrow_date']);
+            $hourly[(int)$dt->format('G')]++;
+            $dow[(int)$dt->format('w')]++;
+        } catch (Exception $e) {
+            // ignore
+        }
+
+        if (isset($b['status']) && $b['status'] === 'returned') {
+            $totalReturns++;
+        }
+    }
+
+    // Map book ids to titles and find most/least borrowed
+    $bookMap = [];
+    foreach ($books as $bk) $bookMap[$bk['id']] = $bk['title'];
+
+    arsort($perBook);
+    $mostBorrowed = null;
+    $leastBorrowed = null;
+    if (!empty($perBook)) {
+        $firstKey = array_key_first($perBook);
+        $mostBorrowed = ['book_id' => $firstKey, 'title' => ($bookMap[$firstKey] ?? ''), 'count' => $perBook[$firstKey]];
+        $lastKey = array_key_last($perBook);
+        $leastBorrowed = ['book_id' => $lastKey, 'title' => ($bookMap[$lastKey] ?? ''), 'count' => $perBook[$lastKey]];
+    }
+
+    // Peak usage periods: top 3 hours and top 3 days
+    $hourlyPairs = [];
+    foreach ($hourly as $h => $c) $hourlyPairs[] = ['hour' => $h, 'count' => $c];
+    usort($hourlyPairs, function($a,$b){ return $b['count'] - $a['count']; });
+    $topHours = array_slice($hourlyPairs, 0, 3);
+
+    $dowPairs = [];
+    $days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    foreach ($dow as $d => $c) $dowPairs[] = ['day' => $days[$d], 'count' => $c];
+    usort($dowPairs, function($a,$b){ return $b['count'] - $a['count']; });
+    $topDays = array_slice($dowPairs, 0, 3);
+
+    echo json_encode([
+        'success' => true,
+        'total_issues' => $totalIssues,
+        'total_returns' => $totalReturns,
+        'most_borrowed' => $mostBorrowed,
+        'least_borrowed' => $leastBorrowed,
+        'peak_hours' => $topHours,
+        'peak_days' => $topDays
+    ]);
 }
 
 function getBooks() {
     $search = $_GET['search'] ?? '';
     $category = $_GET['category'] ?? '';
-    
     $books = loadJSON('books.json');
-    
+    $waitingCounts = getWaitingCounts();
+
+    // find recent returns (within last 24 hours)
+    $borrowing = loadJSON('borrowing.json');
+    $recentReturns = [];
+    $now = new DateTime();
+    foreach ($borrowing as $br) {
+        if (isset($br['status']) && $br['status'] === 'returned' && !empty($br['return_date'])) {
+            try {
+                $ret = new DateTime($br['return_date']);
+                $diff = $now->getTimestamp() - $ret->getTimestamp();
+                if ($diff <= 24 * 60 * 60) {
+                    $recentReturns[$br['book_id']] = true;
+                }
+            } catch (Exception $e) {
+                // ignore parse errors
+            }
+        }
+    }
+
+    // attach waiting_count, demand flag, popularity, and status_label
+    foreach ($books as &$b) {
+        $id = $b['id'];
+        $count = isset($waitingCounts[$id]) ? $waitingCounts[$id] : 0;
+        $b['waiting_count'] = $count;
+        $b['demand'] = ($count >= 3); // threshold for high demand
+        if (!isset($b['popularity'])) $b['popularity'] = 0;
+
+        // compute status: Recently Returned, Available, Reserved, Issued
+        if (isset($b['available_copies']) && $b['available_copies'] > 0) {
+            if (isset($recentReturns[$id]) && $recentReturns[$id]) {
+                $b['status_label'] = 'Recently Returned';
+            } else {
+                $b['status_label'] = 'Available';
+            }
+        } else {
+            if ($count > 0) {
+                $b['status_label'] = 'Reserved';
+            } else {
+                $b['status_label'] = 'Issued';
+            }
+        }
+    }
+
     $filtered = array_filter($books, function($book) use ($search, $category) {
         $matchSearch = empty($search) || stripos($book['title'], $search) !== false || stripos($book['author'], $search) !== false || stripos($book['isbn'], $search) !== false;
         $matchCategory = empty($category) || $book['category'] === $category;
         return $matchSearch && $matchCategory;
     });
-    
+
     echo json_encode(['success' => true, 'books' => array_values($filtered)]);
+}
+
+function getWaitingCounts() {
+    $waiting = loadJSON('waiting_list.json');
+    $counts = [];
+    foreach ($waiting as $w) {
+        if (isset($w['status']) && $w['status'] !== 'active') continue;
+        $id = $w['book_id'];
+        if (!isset($counts[$id])) $counts[$id] = 0;
+        $counts[$id]++;
+    }
+    return $counts;
+}
+
+function getHighDemandBooks() {
+    $books = loadJSON('books.json');
+    $waitingCounts = getWaitingCounts();
+
+    $high = [];
+    foreach ($books as $b) {
+        $id = $b['id'];
+        $count = isset($waitingCounts[$id]) ? $waitingCounts[$id] : 0;
+        if ($count >= 3) {
+            if (!isset($b['popularity'])) $b['popularity'] = 0;
+            $b['waiting_count'] = $count;
+            $b['demand'] = true;
+            $high[] = $b;
+        }
+    }
+
+    usort($high, function($a, $b) {
+        return $b['waiting_count'] - $a['waiting_count'];
+    });
+
+    echo json_encode(['success' => true, 'high_demand' => $high]);
 }
 
 function borrowBook() {
@@ -102,10 +256,12 @@ function borrowBook() {
         
         $borrowing[] = $newBorrow;
         
-        // Update available copies
+        // Update available copies and increment popularity
         foreach ($books as &$b) {
             if ($b['id'] == $bookId) {
                 $b['available_copies']--;
+                if (!isset($b['popularity'])) $b['popularity'] = 0;
+                $b['popularity']++;
                 break;
             }
         }
@@ -120,6 +276,101 @@ function borrowBook() {
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => 'Error borrowing book: ' . $e->getMessage()]);
     }
+}
+
+function getTopBooks() {
+    $books = loadJSON('books.json');
+
+    usort($books, function($a, $b) {
+        $pa = isset($a['popularity']) ? $a['popularity'] : 0;
+        $pb = isset($b['popularity']) ? $b['popularity'] : 0;
+        return $pb - $pa;
+    });
+
+    $top = array_slice($books, 0, 5);
+
+    // Normalize missing popularity to 0 in response
+    $top = array_map(function($b) {
+        if (!isset($b['popularity'])) $b['popularity'] = 0;
+        return $b;
+    }, $top);
+
+    echo json_encode(['success' => true, 'top_books' => $top]);
+}
+
+function getRecommendations() {
+    $bookId = $_GET['bookId'] ?? '';
+    if (empty($bookId)) {
+        echo json_encode(['success' => false, 'message' => 'Book ID required']);
+        return;
+    }
+
+    $books = loadJSON('books.json');
+    $target = null;
+    foreach ($books as $b) {
+        if ($b['id'] == $bookId) { $target = $b; break; }
+    }
+
+    if (!$target) {
+        echo json_encode(['success' => false, 'message' => 'Book not found']);
+        return;
+    }
+
+    $category = $target['category'];
+    $candidates = [];
+    foreach ($books as $b) {
+        if ($b['id'] == $bookId) continue;
+        if ($b['category'] === $category) {
+            if (!isset($b['popularity'])) $b['popularity'] = 0;
+            $candidates[] = $b;
+        }
+    }
+
+    usort($candidates, function($a, $b) {
+        $pa = $a['popularity'] ?? 0;
+        $pb = $b['popularity'] ?? 0;
+        if ($pb === $pa) return ($b['available_copies'] ?? 0) - ($a['available_copies'] ?? 0);
+        return $pb - $pa;
+    });
+
+    $recs = array_slice($candidates, 0, 5);
+    echo json_encode(['success' => true, 'recommendations' => $recs]);
+}
+
+function estimateFine() {
+    $borrowId = $_GET['borrowId'] ?? $_POST['borrowId'] ?? '';
+    if (empty($borrowId)) {
+        echo json_encode(['success' => false, 'message' => 'Borrow ID required']);
+        return;
+    }
+
+    $borrowing = loadJSON('borrowing.json');
+    $record = null;
+    foreach ($borrowing as $b) {
+        if ($b['id'] == $borrowId) { $record = $b; break; }
+    }
+
+    if (!$record) {
+        echo json_encode(['success' => false, 'message' => 'Borrow record not found']);
+        return;
+    }
+
+    // If already returned, use stored fine_amount
+    if (isset($record['status']) && $record['status'] === 'returned') {
+        $fine = isset($record['fine_amount']) ? $record['fine_amount'] : 0;
+        echo json_encode(['success' => true, 'estimated_fine' => $fine]);
+        return;
+    }
+
+    $dueDate = new DateTime($record['due_date']);
+    $today = new DateTime();
+    $fine = 0;
+    if ($today > $dueDate) {
+        $days = $today->diff($dueDate)->days;
+        $fine = $days * 0.50;
+    }
+
+    echo json_encode(['success' => true, 'estimated_fine' => $fine]);
 }
 
 function getBorrowedBooks() {
@@ -244,6 +495,47 @@ function returnBook() {
         // Log activity
         addActivityLog($userId, 'returned', $borrow['book_id'], $bookTitle);
 
+        // Reservation alert: notify next user in waiting list (if any)
+        try {
+            $waitingList = loadJSON('waiting_list.json');
+            // find next active entry for this book by lowest position
+            $nextIndex = null;
+            $nextEntry = null;
+            foreach ($waitingList as $idx => $entry) {
+                if ($entry['book_id'] == $borrow['book_id'] && isset($entry['status']) && $entry['status'] === 'active') {
+                    if ($nextEntry === null || $entry['position'] < $nextEntry['position']) {
+                        $nextEntry = $entry;
+                        $nextIndex = $idx;
+                    }
+                }
+            }
+
+            if ($nextEntry) {
+                // mark as notified and reserve a copy for them
+                $waitingList[$nextIndex]['status'] = 'notified';
+                $waitingList[$nextIndex]['notified_date'] = date('Y-m-d H:i:s');
+                $waitingList[$nextIndex]['expires_at'] = date('Y-m-d H:i:s', strtotime('+48 hours'));
+
+                // reserve one copy by decrementing available_copies if possible
+                foreach ($books as &$bb) {
+                    if ($bb['id'] == $borrow['book_id']) {
+                        if ($bb['available_copies'] > 0) {
+                            $bb['available_copies']--;
+                        }
+                        break;
+                    }
+                }
+
+                saveJSON('waiting_list.json', $waitingList);
+                saveJSON('books.json', $books);
+
+                // notify the user via activity log
+                addActivityLog($nextEntry['user_id'], 'notified', $borrow['book_id'], $bookTitle);
+            }
+        } catch (Exception $e) {
+            // ignore reservation errors
+        }
+
         $message = 'Book returned successfully';
         if ($fineAmount > 0) {
             $message .= '. Fine of $' . number_format($fineAmount, 2) . ' has been applied.';
@@ -321,7 +613,7 @@ function getWaitingList() {
     $userWaitingList = [];
     
     foreach ($waitingList as $item) {
-        if ($item['user_id'] == $userId && $item['status'] === 'active') {
+        if ($item['user_id'] == $userId && (isset($item['status']) && ($item['status'] === 'active' || $item['status'] === 'notified'))) {
             $book = null;
             foreach ($books as $b) {
                 if ($b['id'] == $item['book_id']) {

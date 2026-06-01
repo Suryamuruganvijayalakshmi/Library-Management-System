@@ -71,6 +71,25 @@
                         <h3>💳 Payment Method</h3>
                         <p>Your payment method is securely stored for fine payments.</p>
                     </div>
+                    <div class="card">
+                        <h3>🔥 Top 5 Most Read Books</h3>
+                        <ul id="topBooksList" class="top-books-list">
+                            <li class="loading">Loading top books...</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>⚠️ High Demand Books</h3>
+                        <ul id="highDemandList" class="top-books-list">
+                            <li class="loading">Loading high demand books...</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>📊 Library Analytics</h3>
+                        <div id="analyticsCard">
+                            <p class="small">Loading analytics...</p>
+                        </div>
+                        <button class="btn btn-secondary" onclick="loadAnalytics()">Refresh</button>
+                    </div>
                 </div>
 
                 <div class="recent-activity">
@@ -207,6 +226,18 @@
         </div>
     </div>
 
+    <!-- Modal for recommendations -->
+    <div id="recommendationsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('recommendationsModal')">&times;</span>
+            <h2>Recommended Books</h2>
+            <div id="recommendationsContent">
+                <p class="loading">Loading recommendations...</p>
+            </div>
+            <button onclick="closeModal('recommendationsModal')" class="btn btn-secondary">Close</button>
+        </div>
+    </div>
+
     <script>
         let currentUser = null;
         let selectedBookId = null;
@@ -217,6 +248,17 @@
             loadUserInfo();
             loadBooks();
             loadBorrowedBooks();
+            loadTopBooks();
+            loadHighDemandBooks();
+
+            // poll for updates every 30 seconds
+            setInterval(function() {
+                loadTopBooks();
+                loadHighDemandBooks();
+                if (document.getElementById('books-section').classList.contains('active')) {
+                    loadBooks();
+                }
+            }, 30000);
         });
 
         function showSection(sectionName) {
@@ -267,14 +309,15 @@
                         container.innerHTML = data.books.map(book => `
                             <div class="book-card">
                                 <div class="book-cover">📕</div>
-                                <h3>${book.title}</h3>
+                                <h3>${book.title} ${book.status_label ? '<span class="badge status-' + (book.status_label.replace(/ /g, '-').toLowerCase()) + '">' + book.status_label + '</span>' : ''} ${book.demand ? '<span class="badge high-demand">High Demand</span>' : ''}</h3>
                                 <p class="author">by ${book.author}</p>
                                 <p class="isbn">ISBN: ${book.isbn}</p>
                                 <p class="category">${book.category}</p>
                                 <p class="available ${book.available_copies > 0 ? 'in-stock' : 'out-of-stock'}">
                                     ${book.available_copies > 0 ? book.available_copies + ' Available' : 'Out of Stock'}
                                 </p>
-                                ${book.available_copies > 0 ? `<button onclick="openBorrowModal(${book.id}, '${book.title}')" class="btn btn-primary">Borrow</button>` : `<button onclick="openWaitingListModal(${book.id}, '${book.title}')" class="btn btn-secondary">Join Waiting List</button>`}
+                                ${book.waiting_count > 0 ? `<p class="small">Waiting: ${book.waiting_count}</p>` : ''}
+                                ${book.available_copies > 0 ? `<button onclick="openBorrowModal(${book.id}, '${book.title.replace(/'/g,"\\'") }')" class="btn btn-primary">Borrow</button>` : `<button onclick="openWaitingListModal(${book.id}, '${book.title.replace(/'/g,"\\'") }')" class="btn btn-secondary">Join Waiting List</button>`}
                             </div>
                         `).join('');
                     } else {
@@ -313,6 +356,16 @@
                     loadBooks();
                     loadBorrowedBooks();
                     loadUserInfo();
+                        loadTopBooks();
+                        loadHighDemandBooks();
+                        // fetch recommendations for this book
+                        fetch('php/books.php?action=getRecommendations&bookId=' + encodeURIComponent(selectedBookId))
+                            .then(r => r.json())
+                            .then(info => {
+                                if (info.success && info.recommendations && info.recommendations.length > 0) {
+                                    showRecommendationsModal(info.recommendations);
+                                }
+                            }).catch(err => console.error('Rec error', err));
                 } else {
                     alert('Error: ' + data.message);
                 }
@@ -359,8 +412,23 @@
 
         function openReturnModal(borrowId, title) {
             selectedBorrowId = borrowId;
-            document.getElementById('returnBookDetails').innerHTML = `<p>Are you sure you want to return "<strong>${title}</strong>"?</p>`;
+            document.getElementById('returnBookDetails').innerHTML = `<p>Checking estimated fine...</p>`;
             document.getElementById('returnModal').style.display = 'block';
+
+            fetch('php/books.php?action=estimateFine&borrowId=' + encodeURIComponent(borrowId))
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const fine = parseFloat(data.estimated_fine || 0).toFixed(2);
+                        const msg = fine > 0 ? `Expected fine: $${fine}` : 'No fine expected';
+                        document.getElementById('returnBookDetails').innerHTML = `<p>Are you sure you want to return "<strong>${title}</strong>"?</p><p class="small">${msg}</p>`;
+                    } else {
+                        document.getElementById('returnBookDetails').innerHTML = `<p>Are you sure you want to return "<strong>${title}</strong>"?</p><p class="small">Unable to estimate fine</p>`;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('returnBookDetails').innerHTML = `<p>Are you sure you want to return "<strong>${title}</strong>"?</p><p class="small">Error estimating fine</p>`;
+                });
         }
 
         function returnBook() {
@@ -378,7 +446,9 @@
                     closeModal('returnModal');
                     loadBorrowedBooks();
                     loadBooks();
-                    loadUserInfo();
+                        loadUserInfo();
+                        loadTopBooks();
+                        loadHighDemandBooks();
                 } else {
                     alert('Error: ' + data.message);
                 }
@@ -424,6 +494,28 @@
                             </div>
                         `).join('');
                     }
+                });
+        }
+
+        function loadTopBooks() {
+            fetch('php/books.php?action=getTopBooks')
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('topBooksList');
+                    if(data.success && data.top_books && data.top_books.length > 0) {
+                        container.innerHTML = data.top_books.map((b, idx) => `
+                            <li>
+                                <strong>${idx + 1}. ${b.title}</strong>
+                                <div class="small">by ${b.author} — ${b.popularity} reads</div>
+                            </li>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<li class="empty-message">No data available</li>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading top books', err);
+                    document.getElementById('topBooksList').innerHTML = '<li class="error-message">Error loading top books</li>';
                 });
         }
 
@@ -493,6 +585,7 @@
                 if(data.success) {
                     loadBooks();
                     loadWaitingList();
+                    loadHighDemandBooks();
                 }
             })
             .catch(err => alert('Error: ' + err));
@@ -546,9 +639,68 @@
                 alert(data.message);
                 if(data.success) {
                     loadWaitingList();
+                    loadHighDemandBooks();
                 }
             })
             .catch(err => alert('Error: ' + err));
+        }
+
+        function loadHighDemandBooks() {
+            fetch('php/books.php?action=getHighDemandBooks')
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('highDemandList');
+                    if(data.success && data.high_demand && data.high_demand.length > 0) {
+                        container.innerHTML = data.high_demand.map((b, idx) => `
+                            <li>
+                                <strong>${b.title}</strong>
+                                <div class="small">Waiting: ${b.waiting_count} — ${b.available_copies} copies</div>
+                            </li>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<li class="empty-message">No high demand books</li>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading high demand books', err);
+                    document.getElementById('highDemandList').innerHTML = '<li class="error-message">Error loading data</li>';
+                });
+        }
+
+        function loadAnalytics() {
+            fetch('php/books.php?action=getAnalytics')
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('analyticsCard');
+                    if (data.success) {
+                        container.innerHTML = `
+                            <p><strong>Total Issues:</strong> ${data.total_issues}</p>
+                            <p><strong>Total Returns:</strong> ${data.total_returns}</p>
+                            <p><strong>Most Borrowed:</strong> ${data.most_borrowed ? data.most_borrowed.title + ' (' + data.most_borrowed.count + ')' : 'N/A'}</p>
+                            <p><strong>Least Borrowed:</strong> ${data.least_borrowed ? data.least_borrowed.title + ' (' + data.least_borrowed.count + ')' : 'N/A'}</p>
+                            <p><strong>Peak Hours:</strong> ${data.peak_hours.map(h => h.hour + ':00 (' + h.count + ')').join(', ')}</p>
+                            <p><strong>Peak Days:</strong> ${data.peak_days.map(d => d.day + ' (' + d.count + ')').join(', ')}</p>
+                        `;
+                    } else {
+                        container.innerHTML = '<p class="error-message">Unable to load analytics</p>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Analytics error', err);
+                    document.getElementById('analyticsCard').innerHTML = '<p class="error-message">Error loading analytics</p>';
+                });
+        }
+
+        function showRecommendationsModal(recs) {
+            const container = document.getElementById('recommendationsContent');
+            container.innerHTML = recs.map(r => `
+                <div class="rec-item">
+                    <h4>${r.title} ${r.available_copies > 0 ? '<span class="badge">Available</span>' : '<span class="badge high-demand">Unavailable</span>'}</h4>
+                    <p class="small">by ${r.author} — ${r.popularity || 0} reads</p>
+                    ${r.available_copies > 0 ? `<button class="btn btn-primary" onclick="openBorrowModal(${r.id}, '${r.title.replace(/'/g,"\\'") }')">Borrow</button>` : ''}
+                </div>
+            `).join('');
+            document.getElementById('recommendationsModal').style.display = 'block';
         }
 
         window.onclick = function(event) {
